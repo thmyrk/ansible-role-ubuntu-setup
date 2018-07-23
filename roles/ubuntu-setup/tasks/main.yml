@@ -1,0 +1,212 @@
+- name: Add google chrome repository
+  apt_repository:
+    repo: deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
+  become: yes
+
+- name: Install google chrome
+  apt:
+    name: google-chrome-stable
+  become: yes
+
+- name: Install git
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - git
+      - git-gui
+  become: yes
+
+- name: Install essential packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - cmake
+      - build-essential
+      - automake
+      - libtool-bin
+  become: yes
+
+- name: Check if Neovim repo exists
+  stat:
+    path: downloads/neovim
+  register: neovim_repo
+
+- name: Clone Neovim repo
+  git:
+    repo: https://github.com/neovim/neovim.git
+    dest: downloads/neovim
+  when: neovim_repo.stat.exists == False
+
+- name: Make Neovim
+  make:
+    chdir: downloads/neovim
+    params: CMAKE_BUILD_TYPE=RelWithDebInfo
+
+- name: Make install Neovim
+  make:
+    chdir: downloads/neovim
+    target: install
+  become: yes
+
+- name: Install Docker dependencies
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - wget
+  become: yes
+
+- name: Add docker key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+  become: yes
+
+- name: Add docker repository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable
+    update_cache: yes
+  become: yes
+
+- name: Install docker
+  apt:
+    name: docker-ce
+  become: yes
+
+- name: Install docker-compose
+  pip:
+    name: docker-compose
+    extra_args: --user
+
+- name: Install Powerline fonts
+  apt:
+    name: fonts-powerline
+  become: yes
+
+- name: Install ImageMagick
+  apt:
+    name: imagemagick
+  become: yes
+
+- name: Install zsh
+  apt:
+    name: zsh
+  become: yes
+
+- name: Check whether zsh is the default shell
+  shell: 'getent passwd $LOGNAME | cut -d: -f7'
+  register: default_shell
+
+# - name: Make zsh the default shell
+#   expect:
+#     command: /bin/bash -c 'chsh -s "$(which zsh)"'
+#     responses: 
+#   when: '"zsh" not in default_shell'
+#   become: yes
+
+- name: Install oh my zsh
+  shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+  when: '"zsh" not in default_shell'
+
+- name: Check if dotfiles repo has been cloned
+  stat:
+    path: ~/workspace/dotfiles
+  register: dotfiles_repo
+
+- name: Clone dotfiles repo
+  git:
+    repo: https://github.com/thmyrk/dotfiles
+    dest: ~/workspace/dotfilfes
+  when: dotfiles_repo.stat.exists == False
+
+- name: Install nvm requirements
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - build-essential
+      - libssl-dev
+  become: yes
+ 
+- name: Check if zsh-nvm plugin is cloned
+  stat:
+    path: ~/.oh-my-zsh/custom/plugins/zsh-nvm
+  register: zsh_nvm_directory
+
+- name: Clone zsh-nvm plugin
+  git:
+    repo: https://github.com/lukechilds/zsh-nvm
+    dest: ~/.oh-my-zsh/custom/plugins/zsh-nvm
+  when: zsh_nvm_directory.stat.exists == False
+
+# - name: Install latest node version
+#   shell: zsh -c "nvm install node"
+
+- name: Check if rbenv repo is cloned
+  stat:
+    path: ~/.rbenv
+  register: rbenv_repo
+
+- name: Clone rbenv
+  git:
+    repo: https://github.com/rbenv/rbenv.git
+    dest: ~/.rbenv
+  when: rbenv_repo.stat.exists == False
+
+- name: Configure rbenv (optional)
+  command: src/configure
+  args:
+    chdir: ~/.rbenv
+    
+- name: Compile rbenv (optional)
+  make:
+    chdir: ~/.rbenv/src
+
+- name: Check if ruby-build repo is cloned
+  stat:
+    path: ~/.rbenv/plugins/ruby-build
+  register: ruby_build_repo
+
+- name: Clone ruby-build repo
+  git:
+    repo: https://github.com/rbenv/ruby-build.git
+    dest: ~/.rbenv/plugins/ruby-build
+  when: ruby_build_repo.stat.exists == False
+
+- name: Install Ruby dependencies
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - autoconf
+      - bison
+      - build-essential
+      - libssl-dev
+      - libyaml-dev
+      - libreadline6-dev
+      - zlib1g-dev
+      - libncurses5-dev
+      - libffi-dev
+      - libgdbm5
+      - libgdbm-dev
+  become: yes
+
+- name: Install latest ruby version
+  shell: rbenv install 2.5.1
+
+- name: Set Ruby version 2.5.1 as global
+  shell: rbenv global 2.5.1
+
+- name: Create link for .zshrc config file
+  file:
+    dest: ~/.zshrc
+    src: ~/workspace/dotfiles/.zshrc
+    force: yes
+    state: link
+  
+  # node, npm, yarn, psql, redis, rbenv
