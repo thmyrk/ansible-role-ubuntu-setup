@@ -1,4 +1,4 @@
-# ubuntu-setup
+# Ubuntu 18.04 setup
 Ansible playbook for setting up an Ubuntu environment for a Ruby on Rails programmer using creator's personal configs
 Sets up:
 * google chrome
