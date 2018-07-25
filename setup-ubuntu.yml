@@ -1,3 +1,13 @@
 - hosts: localhost
   roles:
-    - ubuntu-setup
+    - base
+    - git
+    - google-chrome
+    - docker
+    - zsh
+    - neovim
+    - yarn
+    - node
+    - postgresql
+    - redis
+    - ruby

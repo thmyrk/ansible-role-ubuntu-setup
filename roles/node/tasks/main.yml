@@ -1,0 +1,25 @@
+- name: Install nvm requirements
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - build-essential
+      - libssl-dev
+  become: yes
+
+- name: Check if zsh-nvm plugin is cloned
+  stat:
+    path: ~/.oh-my-zsh/custom/plugins/zsh-nvm
+  register: zsh_nvm_directory
+
+- name: Clone zsh-nvm plugin
+  git:
+    repo: https://github.com/lukechilds/zsh-nvm
+    dest: ~/.oh-my-zsh/custom/plugins/zsh-nvm
+  when: zsh_nvm_directory.stat.exists == False
+
+- name: Install latest node version
+  shell: zsh -c "source ~/.zshrc && nvm install node"
+
+- name: Set latest node version as default
+  shell: zsh -c "source ~/.zshrc && nvm alias default node"

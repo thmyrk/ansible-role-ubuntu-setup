@@ -1,0 +1,38 @@
+- name: Install essential neovim packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - cmake
+      - build-essential
+      - automake
+      - libtool-bin
+  become: yes
+
+- name: Install Docker dependencies
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - wget
+  become: yes
+
+- name: Install ImageMagick
+  apt:
+    name: imagemagick
+  become: yes
+
+- name: Check if dotfiles repo has been cloned
+  stat:
+    path: ~/workspace/dotfiles
+  register: dotfiles_repo
+
+- name: Clone dotfiles repo
+  git:
+    repo: https://github.com/thmyrk/dotfiles
+    dest: ~/workspace/dotfilfes
+  when: dotfiles_repo.stat.exists == False

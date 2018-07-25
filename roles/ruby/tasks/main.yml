@@ -1,0 +1,72 @@
+- name: Check if rbenv repo is cloned
+  stat:
+    path: ~/.rbenv
+  register: rbenv_repo
+
+- name: Clone rbenv
+  git:
+    repo: https://github.com/rbenv/rbenv.git
+    dest: ~/.rbenv
+  when: rbenv_repo.stat.exists == False
+
+- name: Configure rbenv (optional)
+  command: src/configure
+  args:
+    chdir: ~/.rbenv
+
+- name: Compile rbenv (optional)
+  make:
+    chdir: ~/.rbenv/src
+
+- name: Check if ruby-build repo is cloned
+  stat:
+    path: ~/.rbenv/plugins/ruby-build
+  register: ruby_build_repo
+
+- name: Clone ruby-build repo
+  git:
+    repo: https://github.com/rbenv/ruby-build.git
+    dest: ~/.rbenv/plugins/ruby-build
+  when: ruby_build_repo.stat.exists == False
+
+- name: Install Ruby dependencies
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - autoconf
+      - bison
+      - build-essential
+      - libssl-dev
+      - libyaml-dev
+      - libreadline6-dev
+      - zlib1g-dev
+      - libncurses5-dev
+      - libffi-dev
+      - libgdbm5
+      - libgdbm-dev
+  become: yes
+
+- name: Check if ruby is installed
+  shell: 'rbenv versions | grep 2.5.1 | cat'
+  register: ruby_installed_version
+
+- name: Install latest ruby version
+  shell: rbenv install 2.5.1
+  when: ruby_installed_version.stdout == ""
+
+- name: Set Ruby version 2.5.1 as global
+  shell: rbenv global 2.5.1
+  when: ruby_installed_version.stdout == ""
+
+- name: Install bundler gem
+  gem:
+    name: bundler
+
+- name: Install rails gem
+  gem:
+    name: rails
+
+- name: Install foreman gem
+  gem:
+    name: foreman

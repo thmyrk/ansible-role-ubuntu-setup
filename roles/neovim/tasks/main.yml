@@ -1,0 +1,47 @@
+- name: Check if Neovim repo exists
+  stat:
+    path: downloads/neovim
+  register: neovim_repo
+
+- name: Clone Neovim repo
+  git:
+    repo: https://github.com/neovim/neovim.git
+    dest: downloads/neovim
+  when: neovim_repo.stat.exists == False
+
+- name: Make Neovim
+  make:
+    chdir: downloads/neovim
+    params: CMAKE_BUILD_TYPE=RelWithDebInfo
+
+- name: Make install Neovim
+  make:
+    chdir: downloads/neovim
+    target: install
+  become: yes
+
+- name: Check if Vundle is installed
+  stat:
+    path: ~/.config/nvim/bundle/Vundle.vim
+  register: vundle
+
+- name: Install Vundle
+  git:
+    repo: https://github.com/VundleVim/Vundle.vim.git
+    dest: ~/.config/nvim/bundle/Vundle.vim
+  when: vundle.stat.exists == False
+
+- name: Create link for .vimrc config file
+  file:
+    dest: ~/.config/nvim/init.vim
+    src: ~/workspace/dotfiles/.vimrc
+    force: yes
+    state: link
+
+- name: Install nvim plugins
+  shell: nvim +"PluginInstall" +"qall"
+
+- name: Install Powerline fonts
+  apt:
+    name: fonts-powerline
+  become: yes
