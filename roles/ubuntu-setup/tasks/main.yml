@@ -284,3 +284,15 @@
       - redis
       - redis-server
   become: yes
+
+- name: Install bundler gem
+  gem:
+    name: bundler
+
+- name: Install rails gem
+  gem:
+    name: rails
+
+- name: Install foreman gem
+  gem:
+    name: foreman
