@@ -38,4 +38,4 @@ If you have git already installed then clone this repo. If not, then you can dow
 
 ## Manual steps
 You need to manually set ZSH as your default shell using the command
-`chsh -s $(which zsh)'
+`chsh -s $(which zsh)`
