@@ -232,7 +232,6 @@
     force: yes
     state: link
 
-
 - name: Add yarn key
   apt_key:
     url: https://dl.yarnpkg.com/debian/pubkey.gpg
