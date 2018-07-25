@@ -50,6 +50,27 @@
     target: install
   become: yes
 
+- name: Check if Vundle is installed
+  stat:
+    path: ~/.config/nvim/bundle/Vundle.vim
+  register: vundle
+
+- name: Install Vundle
+  git:
+    repo: https://github.com/VundleVim/Vundle.vim.git
+    dest: ~/.config/nvim/bundle/Vundle.vim
+  when: vundle.stat.exists == False
+
+- name: Create link for .vimrc config file
+  file:
+    dest: ~/.config/nvim/init.vim
+    src: ~/workspace/dotfiles/.vimrc
+    force: yes
+    state: link
+
+- name: Install nvim plugins
+  shell: nvim +"PluginInstall" +"qall"
+
 - name: Install Docker dependencies
   apt:
     name: "{{ packages }}"
@@ -102,13 +123,6 @@
   shell: 'getent passwd $LOGNAME | cut -d: -f7'
   register: default_shell
 
-# - name: Make zsh the default shell
-#   expect:
-#     command: /bin/bash -c 'chsh -s "$(which zsh)"'
-#     responses: 
-#   when: '"zsh" not in default_shell'
-#   become: yes
-
 - name: Install oh my zsh
   shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
   when: '"zsh" not in default_shell'
@@ -132,7 +146,7 @@
       - build-essential
       - libssl-dev
   become: yes
- 
+
 - name: Check if zsh-nvm plugin is cloned
   stat:
     path: ~/.oh-my-zsh/custom/plugins/zsh-nvm
@@ -144,8 +158,11 @@
     dest: ~/.oh-my-zsh/custom/plugins/zsh-nvm
   when: zsh_nvm_directory.stat.exists == False
 
-# - name: Install latest node version
-#   shell: zsh -c "nvm install node"
+- name: Install latest node version
+  shell: zsh -c "source ~/.zshrc && nvm install node"
+
+- name: Set latest node version as default
+  shell: zsh -c "source ~/.zshrc && nvm alias default node"
 
 - name: Check if rbenv repo is cloned
   stat:
@@ -162,7 +179,7 @@
   command: src/configure
   args:
     chdir: ~/.rbenv
-    
+
 - name: Compile rbenv (optional)
   make:
     chdir: ~/.rbenv/src
@@ -196,11 +213,17 @@
       - libgdbm-dev
   become: yes
 
+- name: Check if ruby is installed
+  shell: 'rbenv versions | grep 2.5.1 | cat'
+  register: ruby_installed_version
+
 - name: Install latest ruby version
   shell: rbenv install 2.5.1
+  when: ruby_installed_version.stdout == ""
 
 - name: Set Ruby version 2.5.1 as global
   shell: rbenv global 2.5.1
+  when: ruby_installed_version.stdout == ""
 
 - name: Create link for .zshrc config file
   file:
@@ -208,5 +231,56 @@
     src: ~/workspace/dotfiles/.zshrc
     force: yes
     state: link
-  
-  # node, npm, yarn, psql, redis, rbenv
+
+
+- name: Add yarn key
+  apt_key:
+    url: https://dl.yarnpkg.com/debian/pubkey.gpg
+  become: yes
+
+- name: Add yarn repository
+  apt_repository:
+    repo: deb https://dl.yarnpkg.com/debian/ stable main
+    update_cache: yes
+  become: yes
+
+- name: Install yarn
+  apt:
+    name: yarn
+    install_recommends: no
+  become: yes
+
+- name: Install postgresql
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - postgresql
+      - postgresql-contrib
+      - pgadmin3
+  become: yes
+
+- name: Save user name
+  shell: echo $USER
+  register: current_user
+
+- name: Check whether user role exists
+  shell: 'psql -c "\dg" | grep {{ current_user.stdout }} | cat'
+  register: user_role
+  become: yes
+  become_user: postgres
+
+- name: Create postgres user role
+  shell: createuser --createdb --superuser {{ current_user.stdout }}
+  become: yes
+  become_user: postgres
+  when: user_role.stdout == ""
+
+- name: Install redis
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - redis
+      - redis-server
+  become: yes
