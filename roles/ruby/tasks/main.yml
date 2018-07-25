@@ -62,11 +62,14 @@
 - name: Install bundler gem
   gem:
     name: bundler
+    user_install: no
 
 - name: Install rails gem
   gem:
     name: rails
+    user_install: no
 
 - name: Install foreman gem
   gem:
     name: foreman
+    user_install: no

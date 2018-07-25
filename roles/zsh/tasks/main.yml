@@ -9,7 +9,7 @@
 
 - name: Install oh my zsh
   shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-  when: '"zsh" not in default_shell'
+  when: '"zsh" not in default_shell.stdout'
 
 - name: Create link for .zshrc config file
   file:
