@@ -36,3 +36,7 @@
     repo: https://github.com/thmyrk/dotfiles
     dest: ~/workspace/dotfilfes
   when: dotfiles_repo.stat.exists == False
+
+- name: Install essential pg gem packages
+  apt:
+    name: libpq-dev
