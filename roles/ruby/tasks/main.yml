@@ -73,3 +73,15 @@
   gem:
     name: foreman
     user_install: no
+
+- name: Install rubocop gem
+  gem:
+    name: rubocop
+    user_install: no
+
+- name: Create link for .rubocop.yml config file
+  file:
+    dest: ~/.rubocop.yml
+    src: ~/workspace/dotfiles/.rubocop.yml
+    force: yes
+    state: link

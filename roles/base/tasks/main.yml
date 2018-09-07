@@ -40,3 +40,7 @@
 - name: Install essential pg gem packages
   apt:
     name: libpq-dev
+
+- name: Install essential sqlite gem packages
+  apt:
+    name: libsqlite3-dev
