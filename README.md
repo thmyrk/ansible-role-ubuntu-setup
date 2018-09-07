@@ -40,3 +40,7 @@ If you have git already installed then clone this repo. If not, then you can dow
 ## Manual steps
 You need to manually set ZSH as your default shell using the command
 `chsh -s $(which zsh)`
+
+If installed docker, then you need to add yourself to the `docker` group in order to use docker as non-root. `sudo useradd -aG docker $USER`
+
+After installation finishes restart the machine.
